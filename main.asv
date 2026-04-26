@@ -1,0 +1,3 @@
+function [x_min] FP_algorythm(m, B0, )
+
+end
