@@ -1,141 +1,292 @@
 clear all; close all;
 
-
 firefly_gui();
- 
+
 function firefly_gui()
- 
-fig = uifigure('Name', 'Algorytm Swietlika', 'Position', [100 80 320 520], 'Color', [0.15 0.15 0.15]);
- 
-uilabel(fig, 'Text', 'fobj (np. x^2 + y^2):', 'Position', [15 488 270 22], ...
-    'FontColor', [0.6 0.6 0.6], 'BackgroundColor', [0.15 0.15 0.15], 'FontSize', 11);
-fldFobj = uieditfield(fig, 'text', 'Value', 'x^2 + y^2', ...
-    'Position', [15 462 270 26], 'FontSize', 12);
- 
-uilabel(fig, 'Text', 'm (swietliki):',  'Position', [15 425 130 22], 'FontColor', [0.9 0.9 0.9], 'BackgroundColor', [0.15 0.15 0.15], 'FontSize', 12);
-fldM = uieditfield(fig, 'numeric', 'Value', 20,  'Position', [155 425 130 26], 'FontSize', 12);
- 
-uilabel(fig, 'Text', 'MaxGeneration:', 'Position', [15 385 130 22], 'FontColor', [0.9 0.9 0.9], 'BackgroundColor', [0.15 0.15 0.15], 'FontSize', 12);
-fldGen = uieditfield(fig, 'numeric', 'Value', 100,'Position', [155 385 130 26], 'FontSize', 12);
- 
-uilabel(fig, 'Text', 'B0:',            'Position', [15 345 130 22], 'FontColor', [0.9 0.9 0.9], 'BackgroundColor', [0.15 0.15 0.15], 'FontSize', 12);
-fldB0 = uieditfield(fig, 'numeric', 'Value', 1,   'Position', [155 345 130 26], 'FontSize', 12);
- 
-uilabel(fig, 'Text', 'alpha:',         'Position', [15 305 130 22], 'FontColor', [0.9 0.9 0.9], 'BackgroundColor', [0.15 0.15 0.15], 'FontSize', 12);
-fldAlpha = uieditfield(fig, 'numeric', 'Value', 0.2,'Position', [155 305 130 26], 'FontSize', 12);
- 
-uilabel(fig, 'Text', 'lb:',            'Position', [15 265 130 22], 'FontColor', [0.9 0.9 0.9], 'BackgroundColor', [0.15 0.15 0.15], 'FontSize', 12);
-fldLb = uieditfield(fig, 'numeric', 'Value', -5,  'Position', [155 265 130 26], 'FontSize', 12);
- 
-uilabel(fig, 'Text', 'ub:',            'Position', [15 225 130 22], 'FontColor', [0.9 0.9 0.9], 'BackgroundColor', [0.15 0.15 0.15], 'FontSize', 12);
-fldUb = uieditfield(fig, 'numeric', 'Value', 5,   'Position', [155 225 130 26], 'FontSize', 12);
+    %========================
+    %  GUI
+    %========================
+    fig = uifigure('Name', 'Algorytm Swietlika', ...
+        'Position', [100 80 920 620], ...
+        'Color', [0.15 0.15 0.15]);
 
-txtResult = uitextarea(fig, 'Value', '', ...
-    'Position', [15 95 270 115], ...
-    'FontColor', [0.2 0.9 0.5], 'BackgroundColor', [0.08 0.08 0.08], ...
-    'FontSize', 10, 'Editable', 'off');
+    % Title
+    uilabel(fig, 'Text', 'ALGORYTM SWIETLIKA - MIN / MAX', ...
+        'Position', [20 575 420 30], ...
+        'FontSize', 18, 'FontWeight', 'bold', ...
+        'FontColor', [0.95 0.95 0.95], ...
+        'BackgroundColor', [0.15 0.15 0.15]);
 
-uibutton(fig, 'Text', 'URUCHOM', 'Position', [15 20 270 60], ...
-    'FontSize', 15, 'FontWeight', 'bold', ...
-    'BackgroundColor', [0.2 0.7 0.45], 'FontColor', [1 1 1], ...
-    'ButtonPushedFcn', @(~,~) run());
- 
-        function run()
-        % Slowa kluczowe MATLABa do wykluczenia
-        matlab_keywords = {'sin','cos','tan','exp','log','sqrt','abs', ...
-            'mod','rem','floor','ceil','round','pi','inf','nan', ...
-            'asin','acos','atan','sinh','cosh','tanh','sign','max','min'};
- 
-        expr = fldFobj.Value;
- 
-        % Znajdz wszystkie slowa (potencjalne zmienne)
-        tokens = regexp(expr, '[a-zA-Z][a-zA-Z0-9_]*', 'match');
-        % Usun duplikaty i slowa kluczowe
-        vars = unique(tokens);
-        vars = vars(~ismember(vars, matlab_keywords));
- 
-        if isempty(vars)
-            uialert(fig, 'Nie znaleziono zmiennych! Uzyj np.: x^2 + y^2', 'Blad');
-            return;
-        end
- 
-        n = length(vars);
- 
-        % Zamien zmienne na var(1), var(2), ... - od najdluzszych zeby uniknac
-        % blednego zastapienia (np. 'xx' przed 'x')
-        [~, ord] = sort(cellfun(@length, vars), 'descend');
-        vars_sorted = vars(ord);
-        expr_mapped = expr;
-        for k = 1:length(vars_sorted)
-            idx = find(strcmp(vars, vars_sorted{k}));
-            expr_mapped = regexprep(expr_mapped, ...
-                ['(?<![a-zA-Z0-9_])' vars_sorted{k} '(?![a-zA-Z0-9_])'], ...
-                sprintf('var(%d)', idx));
-        end
- 
-        try
-            fobj = str2func(['@(var) ' expr_mapped]);
-            fobj(zeros(1, n)); % test
-        catch
-            uialert(fig, 'Nieprawidlowa funkcja!', 'Blad');
-            return;
-        end
- 
-        txtResult.Value = 'Dzialanie...';
+    % -------------------------
+    % Objective
+    % -------------------------
+    uilabel(fig, 'Text', 'Funkcja celu:', ...
+        'Position', [20 530 120 22], ...
+        'FontSize', 12, ...
+        'FontColor', [0.9 0.9 0.9], ...
+        'BackgroundColor', [0.15 0.15 0.15]);
 
-        [x_best, f_best] = firefly_algorithm(fobj, ...
-            fldM.Value, n, fldGen.Value, ...
-            fldB0.Value, fldAlpha.Value, fldLb.Value, fldUb.Value);
+    fldObj = uieditfield(fig, 'text', ...
+        'Value', '2*x1 + 4*x2 + 3*x3', ...
+        'Position', [140 528 300 26], ...
+        'FontSize', 12);
 
+    uilabel(fig, 'Text', 'Tryb:', ...
+        'Position', [460 530 50 22], ...
+        'FontSize', 12, ...
+        'FontColor', [0.9 0.9 0.9], ...
+        'BackgroundColor', [0.15 0.15 0.15]);
 
-        resultText = sprintf('f_min = %.6f\n', f_best);
-        for k = 1:n
-            resultText = [resultText sprintf('%s = %.6f\n', vars{k}, x_best(k))];
-        end
-        txtResult.Value = resultText;
+    ddMode = uidropdown(fig, ...
+        'Items', {'minimalizuj', 'maksymalizuj'}, ...
+        'Value', 'maksymalizuj', ...
+        'Position', [510 528 140 26], ...
+        'FontSize', 12);
+
+    % -------------------------
+    % Algorithm parameters
+    % -------------------------
+    panelAlg = uipanel(fig, ...
+        'Title', 'Parametry algorytmu', ...
+        'Position', [20 270 360 230], ...
+        'BackgroundColor', [0.19 0.19 0.19], ...
+        'ForegroundColor', [0.95 0.95 0.95], ...
+        'FontSize', 12);
+
+    labelsAlg = {'Liczba swietlikow m:', 'Liczba iteracji:', 'B0:', 'alpha:', 'lb:', 'ub:'};
+    defaultsAlg = {25, 120, 1, 0.2, 0, 40};
+    algFields = cell(1,6);
+
+    y0 = 170;
+    for k = 1:6
+        uilabel(panelAlg, 'Text', labelsAlg{k}, ...
+            'Position', [15 y0 120 22], ...
+            'FontSize', 11, ...
+            'FontColor', [0.9 0.9 0.9], ...
+            'BackgroundColor', [0.19 0.19 0.19]);
+
+        algFields{k} = uieditfield(panelAlg, 'numeric', ...
+            'Value', defaultsAlg{k}, ...
+            'Position', [145 y0 180 26], ...
+            'FontSize', 11);
+        y0 = y0 - 30;
     end
- 
+
+    fldM = algFields{1};
+    fldGen = algFields{2};
+    fldB0 = algFields{3};
+    fldAlpha = algFields{4};
+    fldLb = algFields{5};
+    fldUb = algFields{6};
+
+    % -------------------------
+    % Constraints panel
+    % -------------------------
+    panelCon = uipanel(fig, ...
+        'Title', 'Ograniczenia', ...
+        'Position', [400 170 490 330], ...
+        'BackgroundColor', [0.19 0.19 0.19], ...
+        'ForegroundColor', [0.95 0.95 0.95], ...
+        'FontSize', 12);
+
+    uilabel(panelCon, 'Text', 'A*x <= b', ...
+        'Position', [15 285 120 22], ...
+        'FontSize', 11, ...
+        'FontColor', [0.7 0.9 0.7], ...
+        'BackgroundColor', [0.19 0.19 0.19]);
+
+    % Column headers
+    uilabel(panelCon, 'Text', 'x1', 'Position', [95 260 40 20], 'FontColor', [0.9 0.9 0.9], 'BackgroundColor', [0.19 0.19 0.19]);
+    uilabel(panelCon, 'Text', 'x2', 'Position', [185 260 40 20], 'FontColor', [0.9 0.9 0.9], 'BackgroundColor', [0.19 0.19 0.19]);
+    uilabel(panelCon, 'Text', 'x3', 'Position', [275 260 40 20], 'FontColor', [0.9 0.9 0.9], 'BackgroundColor', [0.19 0.19 0.19]);
+    uilabel(panelCon, 'Text', 'b',  'Position', [405 260 40 20], 'FontColor', [0.9 0.9 0.9], 'BackgroundColor', [0.19 0.19 0.19]);
+
+    % Constraint 1
+    uilabel(panelCon, 'Text', '1:', 'Position', [15 225 30 22], 'FontColor', [0.9 0.9 0.9], 'BackgroundColor', [0.19 0.19 0.19]);
+    c11 = uieditfield(panelCon, 'numeric', 'Value', 3, 'Position', [80 225 75 26]);
+    c12 = uieditfield(panelCon, 'numeric', 'Value', 4, 'Position', [170 225 75 26]);
+    c13 = uieditfield(panelCon, 'numeric', 'Value', 2, 'Position', [260 225 75 26]);
+    b1  = uieditfield(panelCon, 'numeric', 'Value', 60, 'Position', [395 225 75 26]);
+
+    % Constraint 2
+    uilabel(panelCon, 'Text', '2:', 'Position', [15 185 30 22], 'FontColor', [0.9 0.9 0.9], 'BackgroundColor', [0.19 0.19 0.19]);
+    c21 = uieditfield(panelCon, 'numeric', 'Value', 2, 'Position', [80 185 75 26]);
+    c22 = uieditfield(panelCon, 'numeric', 'Value', 1, 'Position', [170 185 75 26]);
+    c23 = uieditfield(panelCon, 'numeric', 'Value', 2, 'Position', [260 185 75 26]);
+    b2  = uieditfield(panelCon, 'numeric', 'Value', 40, 'Position', [395 185 75 26]);
+
+    % Constraint 3
+    uilabel(panelCon, 'Text', '3:', 'Position', [15 145 30 22], 'FontColor', [0.9 0.9 0.9], 'BackgroundColor', [0.19 0.19 0.19]);
+    c31 = uieditfield(panelCon, 'numeric', 'Value', 1, 'Position', [80 145 75 26]);
+    c32 = uieditfield(panelCon, 'numeric', 'Value', 3, 'Position', [170 145 75 26]);
+    c33 = uieditfield(panelCon, 'numeric', 'Value', 2, 'Position', [260 145 75 26]);
+    b3  = uieditfield(panelCon, 'numeric', 'Value', 80, 'Position', [395 145 75 26]);
+
+    % Bounds info
+    uilabel(panelCon, 'Text', 'Ograniczenia nieujemnosci: x1 >= 0, x2 >= 0, x3 >= 0', ...
+        'Position', [15 100 460 22], ...
+        'FontSize', 11, ...
+        'FontColor', [0.8 0.8 0.8], ...
+        'BackgroundColor', [0.19 0.19 0.19]);
+
+    % -------------------------
+    % Results panel
+    % -------------------------
+    panelRes = uipanel(fig, ...
+        'Title', 'Wynik', ...
+        'Position', [20 20 870 230], ...
+        'BackgroundColor', [0.19 0.19 0.19], ...
+        'ForegroundColor', [0.95 0.95 0.95], ...
+        'FontSize', 12);
+
+    txtResult = uitextarea(panelRes, ...
+        'Value', '', ...
+        'Position', [15 15 370 185], ...
+        'FontColor', [0.2 0.9 0.5], ...
+        'BackgroundColor', [0.08 0.08 0.08], ...
+        'FontSize', 11, ...
+        'Editable', 'off');
+
+    ax = uiaxes(panelRes, 'Position', [410 15 445 185]);
+    ax.Color = [0.95 0.95 0.95];
+    title(ax, 'Przebieg najlepszego wyniku');
+    xlabel(ax, 'Iteracja');
+    ylabel(ax, 'Wartosc');
+    grid(ax, 'on');
+
+    % -------------------------
+    % Run button
+    % -------------------------
+    uibutton(fig, 'Text', 'URUCHOM', ...
+        'Position', [690 520 200 35], ...
+        'FontSize', 14, 'FontWeight', 'bold', ...
+        'BackgroundColor', [0.2 0.7 0.45], 'FontColor', [1 1 1], ...
+        'ButtonPushedFcn', @(~,~) run());
+
+    %========================
+    %  CALLBACK
+    %========================
+    function run()
+        expr = strtrim(fldObj.Value);
+        if isempty(expr)
+            uialert(fig, 'Wpisz funkcje celu.', 'Blad');
+            return;
+        end
+
+        % Fixed 3-variable GUI
+        n = 3;
+
+        % Build objective function from text
+        % User types: 2*x1 + 4*x2 + 3*x3
+        try
+            fobj = str2func(['@(x1,x2,x3) ' expr]);
+            fobj(1,1,1); % test
+        catch
+            uialert(fig, 'Nieprawidlowa funkcja celu. Uzyj x1, x2, x3.', 'Blad');
+            return;
+        end
+
+        A = [c11.Value c12.Value c13.Value;
+             c21.Value c22.Value c23.Value;
+             c31.Value c32.Value c33.Value];
+        b = [b1.Value; b2.Value; b3.Value];
+
+        if strcmp(ddMode.Value, 'minimalizuj')
+            sense = 1;
+        else
+            sense = -1;
+        end
+
+        m = fldM.Value;
+        MaxGeneration = fldGen.Value;
+        B0 = fldB0.Value;
+        alpha = fldAlpha.Value;
+        lb = fldLb.Value;
+        ub = fldUb.Value;
+
+        % For 3 variables keep bounds as vectors
+        lbv = [lb lb lb];
+        ubv = [ub ub ub];
+
+        txtResult.Value = {'Dzialanie...'};
+        drawnow;
+
+        [x_best, f_best, best_history] = firefly_algorithm( ...
+            fobj, A, b, m, n, MaxGeneration, B0, alpha, lbv, ubv, sense, ax);
+
+        if sense == 1
+            header = sprintf('Wynik MIN\n');
+            valText = sprintf('f_min = %.6f\n', f_best);
+        else
+            header = sprintf('Wynik MAX\n');
+            valText = sprintf('f_max = %.6f\n', f_best);
+        end
+
+        resultText = {header, valText};
+        resultText{end+1} = sprintf('x1 = %.6f', x_best(1));
+        resultText{end+1} = sprintf('x2 = %.6f', x_best(2));
+        resultText{end+1} = sprintf('x3 = %.6f', x_best(3));
+
+        txtResult.Value = resultText;
+
+        cla(ax);
+        plot(ax, best_history, 'LineWidth', 1.8);
+        grid(ax, 'on');
+        title(ax, 'Przebieg najlepszego wyniku');
+        xlabel(ax, 'Iteracja');
+        ylabel(ax, 'Wartosc');
+
+        % Console summary too
+        disp('--- RESULT ---');
+        disp(resultText);
+    end
 end
 
-%fobj = @(z) z(1)^2 + z(2)^2;
+%=====================================================
+% Firefly Algorithm for 3 variables with constraints
+%=====================================================
+function [x_best, f_best, best_history] = firefly_algorithm(fobj, A, b, m, n, MaxGeneration, B0, alpha, lb, ub, sense, ax)
 
-%[x_best, f_best] = firefly_algorithm(fobj, 20, 2, 100, 1, 0.2, -5, 5);
-
-function [x_best, f_best, x, fval] = firefly_algorithm(fobj, m, n, MaxGeneration, B0, alpha, lb, ub)
-
+    % Random initialization inside bounds
     x = lb + rand(m, n) .* (ub - lb);
 
-    fval = zeros(m, 1);
+    % Penalty coefficient
+    penalty_weight = 1e6;
+
+    fitness = zeros(m, 1);
     for i = 1:m
-        fval(i) = fobj(x(i, :));
+        fitness(i) = objective_with_penalty(fobj, x(i, :), A, b, penalty_weight, sense);
     end
 
-    [X, Y] = meshgrid(lb:(ub-lb)/50:ub, lb:(ub-lb)/50:ub);
-    Z = arrayfun(@(a,b) fobj([a, b, zeros(1, n-2)]), X, Y);
+    [X, Y] = meshgrid( ...
+        lb(1):(ub(1)-lb(1))/50:ub(1), ...
+        lb(2):(ub(2)-lb(2))/50:ub(2));
+    
+    Z = arrayfun(@(x1, x2) fobj(x1, x2, 0), X, Y);
 
-    figure(1)
-
+    best_history = zeros(MaxGeneration, 1);
+    figure(2)
     for t = 1:MaxGeneration
         for i = 1:m
             for j = 1:m
-                if fval(j) < fval(i)
+                if fitness(j) < fitness(i)
                     r = norm(x(i,:) - x(j,:));
                     beta = B0 * exp(-r^2);
-
                     step = alpha * (rand(1, n) - 0.5) .* (ub - lb);
 
                     x(i,:) = x(i,:) + beta * (x(j,:) - x(i,:)) + step;
-
                     x(i,:) = max(x(i,:), lb);
                     x(i,:) = min(x(i,:), ub);
 
-                    fval(i) = fobj(x(i,:));
+                    fitness(i) = objective_with_penalty(fobj, x(i, :), A, b, penalty_weight, sense);
                 end
             end
         end
 
-        [f_best, idx] = min(fval);
+        [~, idx] = min(fitness);
         x_best = x(idx, :);
+        f_best = fobj(x_best(1), x_best(2), x_best(3));
+        best_history(t) = f_best;
 
         clf
         contour(X, Y, Z, 30)
@@ -145,5 +296,32 @@ function [x_best, f_best, x, fval] = firefly_algorithm(fobj, m, n, MaxGeneration
         title(['Iteracja = ', num2str(t)])
         grid on
         drawnow
+
+        % Optional live plot of convergence
+        if ~isempty(ax) && isvalid(ax)
+            cla(ax);
+            plot(ax, best_history(1:t), 'LineWidth', 1.6);
+            title(ax, sprintf('Przebieg najlepszego wyniku (iteracja %d)', t));
+            xlabel(ax, 'Iteracja');
+            ylabel(ax, 'Wartosc');
+            grid(ax, 'on');
+            drawnow limitrate;
+        end
     end
+end
+
+function fit = objective_with_penalty(fobj, x, A, b, penalty_weight, sense)
+    % Raw objective
+    f = fobj(x(1), x(2), x(3));
+
+    % Inequality constraints A*x <= b
+    viol = max(0, A*x(:) - b).^2;
+
+    % Nonnegativity
+    viol_bounds = max(0, -x(:)).^2;
+
+    penalty = penalty_weight * (sum(viol) + sum(viol_bounds));
+
+    % Convert to minimization if needed
+    fit = sense * f + penalty;
 end
